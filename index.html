@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Random Daily News Based on Topic</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f2f2f2;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    select {
+      padding: 8px;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .news-card {
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin: 15px auto;
+      padding: 20px;
+      width: 90%;
+      max-width: 700px;
+      border-radius: 8px;
+      text-align: left;
+    }
+    .news-card h2 {
+      font-size: 18px;
+      margin: 0 0 10px;
+    }
+    .news-card a {
+      color: #1a73e8;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    #status {
+      margin-top: 10px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <h1>📰 Daily Real News by Topic</h1>
+  <label for="topic">Choose a topic:</label>
+  <select id="topic" onchange="fetchNews()">
+    <option value="top">Top</option>
+    <option value="technology">Technology</option>
+    <option value="business">Business</option>
+    <option value="sports">Sports</option>
+    <option value="health">Health</option>
+    <option value="entertainment">Entertainment</option>
+    <option value="science">Science</option>
+    <option value="world">World</option>
+  </select>
+
+  <div id="newsContainer"></div>
+  <div id="status"></div>
+
+  <script>
+    const apiKey = 'pub_b29d696bb8c3454a98ae3bee173a1d17'; // Replace with your API key
+
+    async function fetchNews() {
+      const topic = document.getElementById('topic').value;
+      const url = `https://newsdata.io/api/1/news?apikey=${apiKey}&language=en&country=us&category=${topic}`;
+
+      document.getElementById('status').textContent = 'Loading news...';
+      document.getElementById('newsContainer').innerHTML = '';
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.results && data.results.length > 0) {
+          const today = new Date();
+          const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+          const news = [];
+
+          // Deterministic selection of 5 articles
+          for (let i = 0; i < 5; i++) {
+            const index = (seed + i) % data.results.length;
+            news.push(data.results[index]);
+          }
+
+          const container = document.getElementById('newsContainer');
+          news.forEach(article => {
+            const card = document.createElement('div');
+            card.className = 'news-card';
+            card.innerHTML = `
+              <h2>${article.title}</h2>
+              <a href="${article.link}" target="_blank">🔗 Read more</a>
+            `;
+            container.appendChild(card);
+          });
+
+          document.getElementById('status').textContent = `Showing ${news.length} articles for "${topic}"`;
+        } else {
+          document.getElementById('status').textContent = 'No articles found.';
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('status').textContent = 'Failed to load news.';
+      }
+    }
+
+    fetchNews(); // Load default topic on start
+  </script>
+</body>
+</html>
